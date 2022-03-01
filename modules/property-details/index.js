@@ -1,12 +1,19 @@
 /* eslint-disable max-statements */
 import { add, format } from "date-fns";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../../components/button";
 import RowContainer from "../../components/row-container";
 import {
-  AccountHeadline, AccountLabel, AccountList, AccountListItem, AccountSection, InfoText, Inset
+  AccountHeadline,
+  AccountLabel,
+  AccountList,
+  AccountListItem,
+  AccountSection,
+  InfoText,
+  InfoTextBold,
+  InfoHighlight,
+  Inset,
 } from "./style";
-
 
 const account = {
   uid: "65156cdc-5cfd-4b34-b626-49c83569f35e",
@@ -34,15 +41,28 @@ const account = {
 };
 
 const Detail = ({}) => {
+  //const [account, setAccount] = useState({});
+
   useEffect(() => {
     window
       .fetch("/api/account")
       .then((res) => res.json())
-      .then(console.log);
+      .then((data) => {
+        console.log(data);
+        //setAccount(data.account);
+      });
   }, []);
 
   let mortgage;
   const lastUpdate = new Date(account.lastUpdate);
+  const originalPurchasePriceDate = new Date(account.originalPurchasePriceDate);
+  const sincePurchase =
+    account.recentValuation.amount - account.originalPurchasePrice;
+  const sincePurchasePercentage =
+    (sincePurchase / account.originalPurchasePrice) * 100;
+  const thisYear = new Date().getFullYear();
+  const yearsSincePurchase = thisYear - originalPurchasePriceDate.getFullYear();
+  const annualAppreciation = sincePurchasePercentage / yearsSincePurchase;
   if (account.associatedMortgages.length) {
     mortgage = account.associatedMortgages[0];
   }
@@ -58,24 +78,34 @@ const Detail = ({}) => {
           }).format(account.recentValuation.amount)}
         </AccountHeadline>
         <AccountList>
-          <AccountListItem><InfoText>
-            {`Last updated ${format(lastUpdate, "do MMM yyyy")}`}
-          </InfoText></AccountListItem>
-          <AccountListItem><InfoText>
-            {`Next update ${format(
-              add(lastUpdate, { days: account.updateAfterDays }),
-              "do MMM yyyy"
-            )}`}
-          </InfoText></AccountListItem>
+          <AccountListItem>
+            <InfoText>
+              {`Last updated ${format(lastUpdate, "do MMM yyyy")}`}
+            </InfoText>
+          </AccountListItem>
+          <AccountListItem>
+            <InfoText>
+              {`Next update ${format(
+                add(lastUpdate, { days: account.updateAfterDays }),
+                "do MMM yyyy"
+              )}`}
+            </InfoText>
+          </AccountListItem>
         </AccountList>
       </AccountSection>
       <AccountSection>
         <AccountLabel>Property details</AccountLabel>
         <RowContainer>
           <AccountList>
-            <AccountListItem><InfoText>{account.name}</InfoText></AccountListItem>
-            <AccountListItem><InfoText>{account.bankName}</InfoText></AccountListItem>
-            <AccountListItem><InfoText>{account.postcode}</InfoText></AccountListItem>
+            <AccountListItem>
+              <InfoText>{account.name}</InfoText>
+            </AccountListItem>
+            <AccountListItem>
+              <InfoText>{account.bankName}</InfoText>
+            </AccountListItem>
+            <AccountListItem>
+              <InfoText>{account.postcode}</InfoText>
+            </AccountListItem>
           </AccountList>
         </RowContainer>
       </AccountSection>
@@ -87,19 +117,60 @@ const Detail = ({}) => {
             onClick={() => alert("You have navigated to the mortgage page")}
           >
             <AccountList>
-              <AccountListItem><InfoText>
-                {new Intl.NumberFormat("en-GB", {
-                  style: "currency",
-                  currency: "GBP",
-                }).format(
-                  Math.abs(account.associatedMortgages[0].currentBalance)
-                )}
-              </InfoText></AccountListItem>
-              <AccountListItem><InfoText>{account.associatedMortgages[0].name}</InfoText></AccountListItem>
+              <AccountListItem>
+                <InfoText>
+                  {new Intl.NumberFormat("en-GB", {
+                    style: "currency",
+                    currency: "GBP",
+                  }).format(
+                    Math.abs(account.associatedMortgages[0].currentBalance)
+                  )}
+                </InfoText>
+              </AccountListItem>
+              <AccountListItem>
+                <InfoText>{account.associatedMortgages[0].name}</InfoText>
+              </AccountListItem>
             </AccountList>
           </RowContainer>
         </AccountSection>
       )}
+      <AccountSection>
+        <AccountLabel>Valuation changes</AccountLabel>
+        <RowContainer>
+          <AccountList>
+            <AccountListItem>
+              <InfoText>
+                {`Purchased for `}
+                <InfoTextBold>
+                  {new Intl.NumberFormat("en-GB", {
+                    style: "currency",
+                    currency: "GBP",
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(account.originalPurchasePrice)}
+                </InfoTextBold>
+                {` in ${format(originalPurchasePriceDate, "MMMM yyyy")}`}
+              </InfoText>
+            </AccountListItem>
+            <AccountListItem>
+              <InfoText>{`Since purchase`}</InfoText>
+              <InfoHighlight>
+                {new Intl.NumberFormat("en-GB", {
+                  style: "currency",
+                  currency: "GBP",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(sincePurchase)}{" "}
+                (${sincePurchasePercentage}%)
+              </InfoHighlight>
+            </AccountListItem>
+            <AccountListItem>
+              <InfoText>{`Annual appreciation`}</InfoText>
+              <InfoHighlight>{annualAppreciation}%</InfoHighlight>
+            </AccountListItem>
+          </AccountList>
+        </RowContainer>
+      </AccountSection>
       <Button
         // This is a dummy action
         onClick={() => alert("You have navigated to the edit account page")}

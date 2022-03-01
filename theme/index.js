@@ -26,6 +26,10 @@ export const theme = {
       900: "#3b3b3b",
       1000: "#222222",
     },
+    positive: {
+      100: "#c2f7e1",
+      200: "#006b57",
+    },
     white: {
       default: "#fff",
     },
